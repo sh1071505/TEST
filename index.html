@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="Professional image composition tool - 클립보드에서 이미지를 붙여넣기하면 자동으로 레이아웃에 배치">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="이미지 레이아웃">
+  <title>Image Layout Studio</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --bg-hover: #22222e;
+      --border-color: #2a2a3a;
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --accent: #6366f1;
+      --accent-hover: #7c7ff7;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --success: #22c55e;
+      --danger: #ef4444;
+      --danger-hover: #f87171;
+      --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --gradient-2: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-glow: 0 0 20px var(--accent-glow);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+
+    .app-container {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px 32px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      background: var(--gradient-1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .title-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .title-text p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .layout-name-input {
+      font-size: 15px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      min-width: 180px;
+      transition: all 0.2s;
+    }
+
+    .layout-name-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .layout-name-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-primary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-primary:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .btn-accent {
+      background: var(--gradient-1);
+      color: white;
+      border: none;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .btn-accent:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .toggle-group {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      padding: 3px;
+    }
+
+    .toggle-btn {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+      border-radius: 7px;
+    }
+
+    .toggle-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+    }
+
+    .checkbox-label:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .checkbox-label input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .main-content {
+      display: flex;
+      gap: 24px;
+    }
+
+    .canvas-section {
+      flex: 1;
+    }
+
+    .canvas-wrapper {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .canvas-container {
+      aspect-ratio: 16/9;
+      background: var(--bg-secondary);
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .canvas-container.has-images {
+      border-style: solid;
+      border-color: var(--border-color);
+      background: #ffffff;
+    }
+
+    .layout-grid {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    .layout-row {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 1px;
+    }
+
+    .layout-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .image-slot {
+      position: relative;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      min-width: 50px;
+      margin-right: 1px;
+    }
+
+    .image-slot:last-child {
+      margin-right: 0;
+    }
+
+    .image-slot.empty {
+      background: white;
+    }
+
+    .image-content {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: grab;
+      min-height: 0;
+      background: white;
+    }
+
+    .image-content:active {
+      cursor: grabbing;
+    }
+
+    .image-content img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .image-title {
+      padding: 3px;
+      background: white;
+      text-align: center;
+    }
+
+    .image-title input {
+      width: 100%;
+      border: none;
+      text-align: center;
+      font-weight: 700;
+      font-size: 14px;
+      background: transparent;
+      color: #1a1a24;
+      padding: 0;
+      line-height: 1.2;
+    }
+
+    .image-title input:focus {
+      outline: none;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+
+    .image-title input::placeholder {
+      color: #aaa;
+    }
+
+    .image-slot .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+
+    .image-slot:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      background: var(--danger-hover);
+      transform: scale(1.1);
+    }
+
+    .resize-handle {
+      position: absolute;
+      right: -5px;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      cursor: ew-resize;
+      background: transparent;
+      z-index: 5;
+    }
+
+    .resize-handle:hover,
+    .resize-handle.active {
+      background: var(--accent);
+      opacity: 0.7;
+    }
+
+    .image-slot:last-child .resize-handle {
+      display: none;
+    }
+
+    body.resizing {
+      cursor: ew-resize !important;
+      user-select: none;
+    }
+
+    body.resizing * {
+      cursor: ew-resize !important;
+    }
+
+    .drop-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(99, 102, 241, 0.15);
+      border: 3px dashed var(--accent);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .image-slot.drag-over .drop-indicator {
+      opacity: 1;
+    }
+
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+    }
+
+    .saved-layouts {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .saved-layouts h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .layout-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      background: var(--bg-secondary);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .layout-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .layout-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .layout-list::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 3px;
+    }
+
+    .layout-list::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    .layout-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .layout-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-color);
+    }
+
+    .layout-item-name {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-primary);
+    }
+
+    .layout-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .layout-item-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .layout-item-btn.load {
+      background: var(--accent);
+      color: white;
+    }
+
+    .layout-item-btn.load:hover {
+      background: var(--accent-hover);
+    }
+
+    .layout-item-btn.delete {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    .layout-item-btn.delete:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+
+    .hint-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .hint-text::before {
+      content: "📋";
+      display: block;
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 24px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    @media (max-width: 1000px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .app-container {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="title-section">
+        <div class="logo">🖼️</div>
+        <div class="title-text">
+          <h1>Image Layout Studio</h1>
+          <p>Professional image composition tool</p>
+        </div>
+        <input type="text" class="layout-name-input" id="layoutName" value="파트이미지" maxlength="30" placeholder="레이아웃 이름">
+      </div>
+      <div class="controls">
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-rows="1">1줄</button>
+          <button class="toggle-btn" data-rows="2">2줄</button>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="hideTitles">
+          제목 숨기기
+        </label>
+        <button class="btn btn-secondary" id="clearBtn">초기화</button>
+        <button class="btn btn-primary" id="saveBtn">저장</button>
+        <button class="btn btn-accent" id="exportBtn">내보내기</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="canvas-section">
+        <div class="canvas-wrapper">
+          <div class="canvas-container" id="canvas">
+            <div class="layout-grid" id="layoutGrid">
+              <div class="layout-row" id="row1"></div>
+            </div>
+            <div class="hint-text" id="hintText">Ctrl+V로 이미지를 붙여넣으세요 (최대 8장)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="saved-layouts">
+          <h3>저장된 레이아웃 <span class="layout-count" id="layoutCount">0/30</span></h3>
+          <div class="layout-list" id="layoutList">
+            <div class="empty-state">
+              <div class="empty-state-icon">📁</div>
+              <p>저장된 레이아웃이 없습니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // State management
+    let state = {
+      images: [],
+      rows: 1,
+      hideTitles: false,
+      layoutName: '파트이미지'
+    };
+
+    let history = [];
+    const MAX_IMAGES = 8;
+    const MAX_LAYOUTS = 30;
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    // DOM Elements
+    const canvas = document.getElementById('canvas');
+    const layoutGrid = document.getElementById('layoutGrid');
+    const hintText = document.getElementById('hintText');
+    const layoutNameInput = document.getElementById('layoutName');
+    const layoutList = document.getElementById('layoutList');
+    const layoutCount = document.getElementById('layoutCount');
+    const toast = document.getElementById('toast');
+    const hideTitlesCheckbox = document.getElementById('hideTitles');
+
+    // Initialize
+    function init() {
+      loadSavedLayouts();
+      setupEventListeners();
+      render();
+    }
+
+    function setupEventListeners() {
+      // Paste event
+      document.addEventListener('paste', handlePaste);
+
+      // Layout name change
+      layoutNameInput.addEventListener('input', (e) => {
+        state.layoutName = e.target.value || '파트이미지';
+      });
+
+      // Row toggle
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          saveHistory();
+          state.rows = parseInt(btn.dataset.rows);
+          render();
+        });
+      });
+
+      // Hide titles toggle
+      hideTitlesCheckbox.addEventListener('change', (e) => {
+        state.hideTitles = e.target.checked;
+        render();
+      });
+
+      // Buttons
+      document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+      document.getElementById('saveBtn').addEventListener('click', saveLayout);
+      document.getElementById('exportBtn').addEventListener('click', exportImage);
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'z') {
+          e.preventDefault();
+          undo();
+        }
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          saveLayout();
+        }
+      });
+    }
+
+    function handlePaste(e) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          if (state.images.length >= MAX_IMAGES) {
+            showToast('최대 8장까지만 추가할 수 있습니다', true);
+            return;
+          }
+
+          const file = item.getAsFile();
+          if (file.size > MAX_IMAGE_SIZE) {
+            showToast('이미지 크기가 너무 큽니다 (최대 10MB)', true);
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              saveHistory();
+              state.images.push({
+                id: Date.now() + Math.random(),
+                src: event.target.result,
+                title: '',
+                width: img.width,
+                height: img.height,
+                flex: 1
+              });
+              render();
+              showToast('이미지가 추가되었습니다');
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+
+    function saveHistory() {
+      history.push(JSON.parse(JSON.stringify(state)));
+      if (history.length > 50) history.shift();
+    }
+
+    function undo() {
+      if (history.length === 0) return;
+      state = history.pop();
+      layoutNameInput.value = state.layoutName;
+      hideTitlesCheckbox.checked = state.hideTitles;
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.rows) === state.rows);
+      });
+      render();
+      showToast('실행 취소됨');
+    }
+
+    function render() {
+      layoutGrid.innerHTML = '';
+      
+      if (state.images.length === 0) {
+        hintText.style.display = 'block';
+        canvas.classList.remove('has-images');
+        const row = document.createElement('div');
+        row.className = 'layout-row';
+        row.id = 'row1';
+        layoutGrid.appendChild(row);
+        return;
+      }
+
+      hintText.style.display = 'none';
+      canvas.classList.add('has-images');
+
+      const rows = state.rows === 2 && state.images.length > 1 
+        ? distributeImages(state.images) 
+        : [state.images];
+
+      let globalIndex = 0;
+      rows.forEach((rowImages, rowIndex) => {
+        const row = document.createElement('div');
+        row.className = 'layout-row';
+        row.dataset.row = rowIndex;
+
+        rowImages.forEach((image, index) => {
+          const slot = createImageSlot(image, rowIndex, index, rowImages.length, globalIndex);
+          row.appendChild(slot);
+          globalIndex++;
+        });
+
+        layoutGrid.appendChild(row);
+      });
+    }
+
+    function distributeImages(images) {
+      if (images.length <= 1) return [images];
+      
+      // Calculate aspect ratios and find best split
+      // Very wide images (aspect > 2.5) should be alone on a row if possible
+      const veryWideIndices = [];
+      images.forEach((img, idx) => {
+        const aspect = img.width / img.height;
+        if (aspect > 2.5) veryWideIndices.push(idx);
+      });
+      
+      // If first image is very wide, put it alone on first row
+      if (veryWideIndices.includes(0) && images.length > 1) {
+        return [[images[0]], images.slice(1)];
+      }
+      
+      // If last images are very wide, put them alone on second row
+      if (veryWideIndices.length > 0 && veryWideIndices[veryWideIndices.length - 1] === images.length - 1 && images.length > 1) {
+        return [images.slice(0, -1), [images[images.length - 1]]];
+      }
+      
+      // Default: split in middle
+      const mid = Math.ceil(images.length / 2);
+      return [images.slice(0, mid), images.slice(mid)];
+    }
+
+    function createImageSlot(image, rowIndex, index, totalInRow, globalIndex) {
+      const slot = document.createElement('div');
+      slot.className = 'image-slot';
+      slot.dataset.id = image.id;
+      slot.style.flex = image.flex || 1;
+
+      // Title (top)
+      if (!state.hideTitles) {
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'image-title';
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.value = image.title || '';
+        titleInput.placeholder = '제목';
+        titleInput.maxLength = 20;
+        titleInput.tabIndex = globalIndex + 1;
+        titleInput.addEventListener('change', (e) => {
+          const img = state.images.find(i => i.id === image.id);
+          if (img) img.title = e.target.value;
+        });
+        titleDiv.appendChild(titleInput);
+        slot.appendChild(titleDiv);
+      }
+
+      // Image content
+      const content = document.createElement('div');
+      content.className = 'image-content';
+      content.draggable = true;
+      
+      const img = document.createElement('img');
+      img.src = image.src;
+      img.draggable = false;
+      content.appendChild(img);
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.innerHTML = '×';
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        saveHistory();
+        state.images = state.images.filter(i => i.id !== image.id);
+        render();
+        showToast('이미지가 삭제되었습니다');
+      });
+      content.appendChild(deleteBtn);
+
+      // Drop indicator
+      const dropIndicator = document.createElement('div');
+      dropIndicator.className = 'drop-indicator';
+      content.appendChild(dropIndicator);
+
+      // Drag and drop
+      content.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', image.id);
+        slot.style.opacity = '0.5';
+      });
+
+      content.addEventListener('dragend', () => {
+        slot.style.opacity = '1';
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+
+      content.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        slot.classList.add('drag-over');
+      });
+
+      content.addEventListener('dragleave', () => {
+        slot.classList.remove('drag-over');
+      });
+
+      content.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        const draggedId = parseFloat(e.dataTransfer.getData('text/plain'));
+        if (draggedId === image.id) return;
+
+        saveHistory();
+        const draggedIdx = state.images.findIndex(i => i.id === draggedId);
+        const targetIdx = state.images.findIndex(i => i.id === image.id);
+        
+        if (draggedIdx !== -1 && targetIdx !== -1) {
+          const temp = state.images[draggedIdx];
+          state.images[draggedIdx] = state.images[targetIdx];
+          state.images[targetIdx] = temp;
+          render();
+        }
+      });
+
+      slot.appendChild(content);
+
+      // Resize handle
+      if (index < totalInRow - 1) {
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        
+        let startX, startFlex, nextStartFlex, nextSlot, nextImage;
+        
+        const onMouseDown = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          startX = e.clientX;
+          startFlex = image.flex || 1;
+          
+          nextSlot = slot.nextElementSibling;
+          const nextId = parseFloat(nextSlot?.dataset.id);
+          nextImage = state.images.find(i => i.id === nextId);
+          nextStartFlex = nextImage?.flex || 1;
+          
+          handle.classList.add('active');
+          document.body.classList.add('resizing');
+          
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+        
+        const onMouseMove = (e) => {
+          const diff = e.clientX - startX;
+          const containerWidth = slot.parentElement.offsetWidth;
+          const totalFlex = startFlex + nextStartFlex;
+          const flexChange = (diff / containerWidth) * totalFlex * 2;
+          
+          let newFlex = startFlex + flexChange;
+          let newNextFlex = nextStartFlex - flexChange;
+          
+          // Clamp values
+          const minFlex = 0.15;
+          if (newFlex < minFlex) {
+            newFlex = minFlex;
+            newNextFlex = totalFlex - minFlex;
+          }
+          if (newNextFlex < minFlex) {
+            newNextFlex = minFlex;
+            newFlex = totalFlex - minFlex;
+          }
+          
+          // Update immediately without saving to state (for performance)
+          slot.style.flex = newFlex;
+          if (nextSlot) nextSlot.style.flex = newNextFlex;
+          
+          // Store for mouseup
+          handle._newFlex = newFlex;
+          handle._newNextFlex = newNextFlex;
+        };
+        
+        const onMouseUp = () => {
+          handle.classList.remove('active');
+          document.body.classList.remove('resizing');
+          
+          // Save final values to state
+          if (handle._newFlex !== undefined) {
+            image.flex = handle._newFlex;
+            if (nextImage) nextImage.flex = handle._newNextFlex;
+          }
+          
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+        
+        handle.addEventListener('mousedown', onMouseDown);
+        slot.appendChild(handle);
+      }
+
+      return slot;
+    }
+
+    function clearCanvas() {
+      if (state.images.length === 0) return;
+      saveHistory();
+      state.images = [];
+      state.layoutName = '파트이미지';
+      layoutNameInput.value = state.layoutName;
+      render();
+      showToast('초기화되었습니다');
+    }
+
+    function saveLayout() {
+      const layouts = JSON.parse(localStorage.getItem('imageLayouts') || '[]');
+      
+      if (layouts.length >= MAX_LAYOUTS) {
+        showToast('최대 30개까지만 저장할 수 있습니다', true);
+        return;
+      }
+
+      if (state.images.length === 0) {
+        showToast('저장할 이미지가 없습니다', true);
+        return;
+      }
+
+      const layout = {
+        id: Date.now(),
+        name: state.layoutName,
+        images: state.images,
+        rows: state.rows,
+        hideTitles: state.hideTitles,
+        savedAt: new Date().toISOString()
+      };
+
+      layouts.unshift(layout);
+      localStorage.setItem('imageLayouts', JSON.stringify(layouts));
+      loadSavedLayouts();
+      showToast('저장되었습니다');
+    }
+
+    function loadSavedLayouts() {
+      const layouts = JSON.parse(localStorage.getItem('imageLayouts') || '[]');
+      layoutCount.textContent = `${layouts.length}/${MAX_LAYOUTS}`;
+
+      if (layouts.length === 0) {
+        layoutList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📁</div>
+            <p>저장된 레이아웃이 없습니다</p>
+          </div>
+        `;
+        return;
+      }
+
+      layoutList.innerHTML = layouts.map(layout => `
+        <div class="layout-item" data-id="${layout.id}">
+          <span class="layout-item-name">${layout.name}</span>
+          <div class="layout-item-actions">
+            <button class="layout-item-btn load" title="불러오기">↓</button>
+            <button class="layout-item-btn delete" title="삭제">×</button>
+          </div>
+        </div>
+      `).join('');
+
+      layoutList.querySelectorAll('.layout-item').forEach(item => {
+        const id = parseInt(item.dataset.id);
+        
+        item.querySelector('.load').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const layout = layouts.find(l => l.id === id);
+          if (layout) {
+            saveHistory();
+            state.images = layout.images;
+            state.rows = layout.rows;
+            state.hideTitles = layout.hideTitles || false;
+            state.layoutName = layout.name;
+            layoutNameInput.value = layout.name;
+            hideTitlesCheckbox.checked = state.hideTitles;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+              btn.classList.toggle('active', parseInt(btn.dataset.rows) === state.rows);
+            });
+            render();
+            showToast('레이아웃을 불러왔습니다');
+          }
+        });
+
+        item.querySelector('.delete').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const filtered = layouts.filter(l => l.id !== id);
+          localStorage.setItem('imageLayouts', JSON.stringify(filtered));
+          loadSavedLayouts();
+          showToast('삭제되었습니다');
+        });
+      });
+    }
+
+    async function exportImage() {
+      if (state.images.length === 0) {
+        showToast('내보낼 이미지가 없습니다', true);
+        return;
+      }
+
+      showToast('이미지 생성 중...');
+
+      const exportCanvas = document.createElement('canvas');
+      const ctx = exportCanvas.getContext('2d');
+      
+      // FHD 16:9
+      const width = 1920;
+      const height = 1080;
+      exportCanvas.width = width;
+      exportCanvas.height = height;
+
+      // White background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, width, height);
+
+      // Calculate layout
+      const titleHeight = state.hideTitles ? 0 : 20;
+      const padding = 1;
+      
+      const rows = state.rows === 2 && state.images.length > 1 
+        ? distributeImages(state.images) 
+        : [state.images];
+
+      const rowHeight = (height - padding * (rows.length - 1)) / rows.length;
+
+      for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const rowImages = rows[rowIndex];
+        const rowY = rowIndex * (rowHeight + padding);
+        const contentHeight = rowHeight - titleHeight;
+        
+        // Calculate flex totals
+        const totalFlex = rowImages.reduce((sum, img) => sum + (img.flex || 1), 0);
+        const availableWidth = width - padding * (rowImages.length - 1);
+        
+        let currentX = 0;
+        
+        for (const image of rowImages) {
+          const slotWidth = (availableWidth * (image.flex || 1)) / totalFlex;
+          
+          // Draw title if not hidden
+          if (!state.hideTitles && image.title) {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(currentX, rowY, slotWidth, titleHeight);
+            ctx.fillStyle = '#1f2937';
+            ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(image.title, currentX + slotWidth / 2, rowY + titleHeight / 2, slotWidth - 20);
+          }
+          
+          // Draw image (contain mode)
+          const img = new Image();
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.src = image.src;
+          });
+          
+          const imgY = rowY + titleHeight;
+          const imgAreaHeight = contentHeight;
+          
+          const scale = Math.min(slotWidth / img.width, imgAreaHeight / img.height);
+          const drawWidth = img.width * scale;
+          const drawHeight = img.height * scale;
+          const drawX = currentX + (slotWidth - drawWidth) / 2;
+          const drawY = imgY + (imgAreaHeight - drawHeight) / 2;
+          
+          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+          
+          currentX += slotWidth + padding;
+        }
+      }
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `${state.layoutName}_${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+      
+      showToast('이미지가 저장되었습니다');
+    }
+
+    function showToast(message, isError = false) {
+      toast.textContent = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 2500);
+    }
+
+    // Start the app
+    init();
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
