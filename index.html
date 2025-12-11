@@ -276,11 +276,10 @@
       display: flex;
       flex: 1;
       min-height: 0;
-      margin-bottom: 1px;
     }
 
-    .layout-row:last-child {
-      margin-bottom: 0;
+    .layout-row:not(:last-child) {
+      border-bottom: 1px solid #e0e0e0;
     }
 
     .image-slot {
@@ -289,11 +288,10 @@
       display: flex;
       flex-direction: column;
       min-width: 50px;
-      margin-right: 1px;
     }
 
-    .image-slot:last-child {
-      margin-right: 0;
+    .image-slot:not(:last-child) {
+      border-right: 1px solid #e0e0e0;
     }
 
     .image-slot.empty {
@@ -498,6 +496,24 @@
       border-color: var(--border-color);
     }
 
+    .layout-item.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .layout-item.active .layout-item-name {
+      color: white;
+    }
+
+    .layout-item.active .layout-item-btn.delete {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+
+    .layout-item.active .layout-item-btn.delete:hover {
+      background: var(--danger);
+    }
+
     .layout-item-name {
       font-size: 13px;
       font-weight: 500;
@@ -682,7 +698,8 @@
       images: [],
       rows: 1,
       hideTitles: false,
-      layoutName: '파트이미지'
+      layoutName: '파트이미지',
+      currentLayoutId: null
     };
 
     let history = [];
@@ -1092,10 +1109,9 @@
       }
 
       layoutList.innerHTML = layouts.map(layout => `
-        <div class="layout-item" data-id="${layout.id}">
+        <div class="layout-item${state.currentLayoutId === layout.id ? ' active' : ''}" data-id="${layout.id}">
           <span class="layout-item-name">${layout.name}</span>
           <div class="layout-item-actions">
-            <button class="layout-item-btn load" title="불러오기">↓</button>
             <button class="layout-item-btn delete" title="삭제">×</button>
           </div>
         </div>
@@ -1104,8 +1120,10 @@
       layoutList.querySelectorAll('.layout-item').forEach(item => {
         const id = parseInt(item.dataset.id);
         
-        item.querySelector('.load').addEventListener('click', (e) => {
-          e.stopPropagation();
+        // Click on item to load
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.layout-item-btn')) return; // Ignore if clicking delete button
+          
           const layout = layouts.find(l => l.id === id);
           if (layout) {
             saveHistory();
@@ -1113,12 +1131,14 @@
             state.rows = layout.rows;
             state.hideTitles = layout.hideTitles || false;
             state.layoutName = layout.name;
+            state.currentLayoutId = layout.id;
             layoutNameInput.value = layout.name;
             hideTitlesCheckbox.checked = state.hideTitles;
             document.querySelectorAll('.toggle-btn').forEach(btn => {
               btn.classList.toggle('active', parseInt(btn.dataset.rows) === state.rows);
             });
             render();
+            loadSavedLayouts(); // Refresh to show active state
             showToast('레이아웃을 불러왔습니다');
           }
         });
@@ -1126,6 +1146,9 @@
         item.querySelector('.delete').addEventListener('click', (e) => {
           e.stopPropagation();
           const filtered = layouts.filter(l => l.id !== id);
+          if (state.currentLayoutId === id) {
+            state.currentLayoutId = null;
+          }
           localStorage.setItem('imageLayouts', JSON.stringify(filtered));
           loadSavedLayouts();
           showToast('삭제되었습니다');
@@ -1155,27 +1178,29 @@
       ctx.fillRect(0, 0, width, height);
 
       // Calculate layout
-      const titleHeight = state.hideTitles ? 0 : 20;
-      const padding = 1;
+      const titleHeight = state.hideTitles ? 0 : 32;
+      const dividerWidth = 1;
+      const dividerColor = '#e0e0e0';
       
       const rows = state.rows === 2 && state.images.length > 1 
         ? distributeImages(state.images) 
         : [state.images];
 
-      const rowHeight = (height - padding * (rows.length - 1)) / rows.length;
+      const rowHeight = (height - dividerWidth * (rows.length - 1)) / rows.length;
 
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const rowImages = rows[rowIndex];
-        const rowY = rowIndex * (rowHeight + padding);
+        const rowY = rowIndex * (rowHeight + dividerWidth);
         const contentHeight = rowHeight - titleHeight;
         
         // Calculate flex totals
         const totalFlex = rowImages.reduce((sum, img) => sum + (img.flex || 1), 0);
-        const availableWidth = width - padding * (rowImages.length - 1);
+        const availableWidth = width - dividerWidth * (rowImages.length - 1);
         
         let currentX = 0;
         
-        for (const image of rowImages) {
+        for (let imgIndex = 0; imgIndex < rowImages.length; imgIndex++) {
+          const image = rowImages[imgIndex];
           const slotWidth = (availableWidth * (image.flex || 1)) / totalFlex;
           
           // Draw title if not hidden
@@ -1183,7 +1208,7 @@
             ctx.fillStyle = 'white';
             ctx.fillRect(currentX, rowY, slotWidth, titleHeight);
             ctx.fillStyle = '#1f2937';
-            ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+            ctx.font = 'bold 24px "Noto Sans KR", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(image.title, currentX + slotWidth / 2, rowY + titleHeight / 2, slotWidth - 20);
@@ -1207,7 +1232,19 @@
           
           ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
           
-          currentX += slotWidth + padding;
+          // Draw vertical divider (except for last image in row)
+          if (imgIndex < rowImages.length - 1) {
+            ctx.fillStyle = dividerColor;
+            ctx.fillRect(currentX + slotWidth, rowY, dividerWidth, rowHeight);
+          }
+          
+          currentX += slotWidth + dividerWidth;
+        }
+        
+        // Draw horizontal divider (except for last row)
+        if (rowIndex < rows.length - 1) {
+          ctx.fillStyle = dividerColor;
+          ctx.fillRect(0, rowY + rowHeight, width, dividerWidth);
         }
       }
 
@@ -1234,12 +1271,13 @@
     // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
           .then((registration) => {
             console.log('SW registered:', registration.scope);
           })
           .catch((error) => {
-            console.log('SW registration failed:', error);
+            // Service worker registration failed - app still works without it
+            console.log('SW registration skipped (offline support disabled)');
           });
       });
     }
