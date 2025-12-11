@@ -2,7 +2,7 @@
   "name": "Image Layout Studio",
   "short_name": "이미지 레이아웃",
   "description": "Professional image composition tool - 클립보드에서 이미지를 붙여넣기하면 자동으로 레이아웃에 배치",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0f",
   "theme_color": "#6366f1",
